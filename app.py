@@ -1,4 +1,3 @@
-from flask import Flask, request, jsonify
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -9,11 +8,8 @@ import json
 import time
 import re
 
-# Set up Flask
-app = Flask(__name__)
-
 # Geckodriver path
-geckodriver_path = 'geckodriver'  # Update this path if necessary
+geckodriver_path = 'usr/local/bin/geckodriver'  # Update this path if necessary
 
 def scroll_slowly(driver, scroll_pause_time=2, scroll_increment=300):
     """Scrolls the page slowly up and down to load all images."""
@@ -75,8 +71,9 @@ def get_feature_image(driver, url):
         print(f"Error finding feature image: {e}")
         return ""
 
-@app.route('/process', methods=['POST'])
-def process_json():
+def process_json(data):
+    """Process the input JSON data and update it with image URLs."""
+    
     # Start a headless Firefox session
     firefox_options = FirefoxOptions()
     firefox_options.add_argument('--no-sandbox')
@@ -88,9 +85,6 @@ def process_json():
     driver = webdriver.Firefox(service=service, options=firefox_options)
 
     try:
-        # Receive JSON from the request
-        data = request.get_json()
-
         # Process the URLs and images
         for key in data:
             for item in data[key]:
@@ -106,11 +100,9 @@ def process_json():
                     item['images'].extend(image_sources)
                     item['feature_image'] = feature_image
 
-        # Send back the updated data
-        return jsonify(data)
+        return data
 
     finally:
         driver.quit()
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+
